@@ -26,13 +26,10 @@ runs:
       shell: bash
     - name: Upload OpenAPI spec to Svix
       run: |
-        echo $TMPFILE
-        cat $TMPFILE
+        CONTENT=$(cat $TMPFILE | jq -Rs)
         curl -X 'POST' 'https://api.${{inputs.svix-region}}.svix.com/api/v1/event-type/import/openapi/' \
             -H 'Authorization: Bearer ${{ inputs.svix-api-key }}' \
-            -H 'Accept: application/json' \
-            -H 'Content-Type: application/json' \
-            --data-binary @$TMPFILE
+            --json "{\"specRaw\": \"$CONTENT\"}"
       shell: bash
     - name: Cleanup
       run: |
