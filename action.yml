@@ -32,11 +32,13 @@ runs:
         RAW_CONTENT=$(jq -Rs . < ${{inputs.openapi-file}})
         echo "{\"specRaw\": $RAW_CONTENT}" > $TMP_PAYLOAD
 
+        echo "Uploading OpenAPI spec to api.${{inputs.svix-region}}.svix.com/api/v1/event-type/import/openapi/"
+
         curl --fail-with-body -X 'POST' 'https://api.${{inputs.svix-region}}.svix.com/api/v1/event-type/import/openapi/' \
             -H 'Authorization: Bearer ${{ inputs.svix-api-key }}' \
             -H 'Accept: application/json' \
             -H 'Content-Type: application/json' \
-            --data-binary "@$TMP_PAYLOAD"
-        
+            --data-binary "@$TMP_PAYLOAD" | jq
+
         rm $TMP_PAYLOAD
       shell: bash
