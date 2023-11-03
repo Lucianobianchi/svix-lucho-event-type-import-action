@@ -17,7 +17,7 @@ runs:
     - uses: mikefarah/yq@v4.35.2
     - run: |
         TMPFILE=$(mktemp)
-        echo $TMPFILE
+        echo "TMPFILE=$TMPFILE" >> $GITHUB_ENV
         cp ${{inputs.openapi-file}} $TMPFILE
       shell: bash
     - name: Transform YAML to JSON
@@ -26,10 +26,15 @@ runs:
       shell: bash
     - name: Upload OpenAPI spec to Svix
       run: |
+        echo $TMPFILE
         cat $TMPFILE
         curl -X 'POST' 'https://api.${{inputs.svix-region}}.svix.com/api/v1/event-type/import/openapi/' \
             -H 'Authorization: Bearer ${{ inputs.svix-api-key }}' \
             -H 'Accept: application/json' \
             -H 'Content-Type: application/json' \
             --data-binary @$TMPFILE
+      shell: bash
+    - name: Cleanup
+      run: |
+        rm $TMPFILE
       shell: bash
