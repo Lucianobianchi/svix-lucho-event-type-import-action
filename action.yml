@@ -16,8 +16,15 @@ runs:
   steps:
     - name: Upload OpenAPI spec to Svix
       run: |
-        RAW_SPEC=$(cat ${{inputs.openapi-file}} | jq -Rs)
+        TMP_PAYLOAD=$(mktemp)
+        RAW_CONTENT=$(jq -Rs . < ${{inputs.openapi-file}})
+        echo "{\"specRaw\": $RAW_CONTENT}" > $TMP_PAYLOAD
+
         curl -X 'POST' 'https://api.${{inputs.svix-region}}.svix.com/api/v1/event-type/import/openapi/' \
             -H 'Authorization: Bearer ${{ inputs.svix-api-key }}' \
-            --json "{\"specRaw\": $RAW_SPEC}"
+            -H 'Accept: application/json' \
+            -H 'Content-Type: application/json' \
+            --data-binary "@$TMP_PAYLOAD"
+        
+        rm $TMP_PAYLOAD
       shell: bash
