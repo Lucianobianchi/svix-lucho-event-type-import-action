@@ -26,6 +26,7 @@ runs:
       shell: bash
     - name: Upload OpenAPI spec to Svix
       run: |
+        cat $TMPFILE
         curl -X 'POST' 'https://api.${{inputs.svix-region}}.svix.com/api/v1/event-type/import/openapi/' \
             -H 'Authorization: Bearer ${{ inputs.svix-api-key }}' \
             -H 'Accept: application/json' \
