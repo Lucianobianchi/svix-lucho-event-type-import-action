@@ -29,7 +29,7 @@ runs:
     - name: Upload OpenAPI spec to Svix
       run: |
         TMP_PAYLOAD=$(mktemp)
-        python3 -c "import json; print(json.dumps({'specRaw': open(${{inputs.openapi-file}},'r').read()}))" > $TMP_PAYLOAD
+        python3 -c "import json; print(json.dumps({'specRaw': open(./${{inputs.openapi-file}},'r').read()}))" > $TMP_PAYLOAD
 
         echo "Uploading OpenAPI spec to api.${{inputs.svix-region}}.svix.com/api/v1/event-type/import/openapi/"
 
