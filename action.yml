@@ -7,6 +7,10 @@ inputs:
   svix-api-key:
     description: 'Svix API key'
     required: true
+  svix-region:
+    description: 'Svix region: us or eu'
+    required: false
+    default: 'us'
 runs:
   using: "composite"
   steps:
@@ -22,7 +26,7 @@ runs:
       shell: bash
     - name: Upload OpenAPI spec to Svix
       run: |
-        curl -X 'POST' 'https://api.us.svix.com/api/v1/event-type/import/openapi/' \
+        curl -X 'POST' 'https://api.${{inputs.svix-region}}.svix.com/api/v1/event-type/import/openapi/' \
             -H 'Authorization: Bearer ${{ inputs.svix-api-key }}' \
             -H 'Accept: application/json' \
             -H 'Content-Type: application/json' \
