@@ -2,7 +2,7 @@ name: 'Upload Event Types to Svix'
 description: 'Upload Event Types from an OpenAPI spec to Svix'
 inputs:
   openapi-file:
-    description: 'Location of the OpenAPI spec file'
+    description: 'Location of the OpenAPI spec file (JSON or YAML)'
     required: true
   svix-api-key:
     description: 'Svix API key'
@@ -14,13 +14,25 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Check input variables
+      run: |
+        if [ ! -f ${{inputs.openapi-file}} ]; then
+          echo "OpenAPI spec file not found"
+          exit 1
+        fi
+
+        if [ "${{inputs.svix-region}}" != "us" ] && [ "${{inputs.svix-region}}" != "eu" ]; then
+          echo "Svix region must be either us or eu"
+          exit 1
+        fi
+      shell: bash
     - name: Upload OpenAPI spec to Svix
       run: |
         TMP_PAYLOAD=$(mktemp)
         RAW_CONTENT=$(jq -Rs . < ${{inputs.openapi-file}})
         echo "{\"specRaw\": $RAW_CONTENT}" > $TMP_PAYLOAD
 
-        curl -X 'POST' 'https://api.${{inputs.svix-region}}.svix.com/api/v1/event-type/import/openapi/' \
+        curl --fail-with-body -X 'POST' 'https://api.${{inputs.svix-region}}.svix.com/api/v1/event-type/import/openapi/' \
             -H 'Authorization: Bearer ${{ inputs.svix-api-key }}' \
             -H 'Accept: application/json' \
             -H 'Content-Type: application/json' \
