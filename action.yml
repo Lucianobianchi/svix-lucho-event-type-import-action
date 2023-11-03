@@ -1,21 +1,30 @@
-name: 'Hello World'
-description: 'Greet someone'
+name: 'Upload Event Types to Svix'
+description: 'Upload Event Types from an OpenAPI spec to Svix'
 inputs:
-  who-to-greet:  # id of input
-    description: 'Who to greet'
+  openapi-file:
+    description: 'Location of the OpenAPI spec file'
     required: true
-    default: 'World'
-outputs:
-  random-number:
-    description: "Random number"
-    value: ${{ steps.random-number-generator.outputs.random-number }}
+  svix-api-key:
+    description: 'Svix API key'
+    required: true
 runs:
   using: "composite"
   steps:
-    - run: echo Hello ${{ inputs.who-to-greet }}.
+    - uses: mikefarah/yq@v4.35.2
+    - run: |
+        TMPFILE=$(mktemp)
+        echo $TMPFILE
+        cp ${{inputs.openapi-file}} $TMPFILE
       shell: bash
-    - id: random-number-generator
-      run: echo "random-number=$(echo $RANDOM)" >> $GITHUB_OUTPUT
+    - name: Transform YAML to JSON
+      if: ${{ endsWith(inputs.openapi-file, '.yml') }}
+      run: yq -o=json ${{inputs.openapi-file}} > $TMPFILE
       shell: bash
-    - run: echo "${{ github.action_path }}" >> $GITHUB_PATH
+    - name: Upload OpenAPI spec to Svix
+      run: |
+        curl -X 'POST' 'https://api.us.svix.com/api/v1/event-type/import/openapi/' \
+            -H 'Authorization: Bearer ${{ inputs.svix-api-key }}' \
+            -H 'Accept: application/json' \
+            -H 'Content-Type: application/json' \
+            --data-binary @$TMPFILE
       shell: bash
